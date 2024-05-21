@@ -9,6 +9,7 @@ pattern = r'<s>Human:(.*?)</s>'
 a=re.findall(pattern,text,re.DOTALL)
 pattern = r'<s>Assistant:(.*?)</s>'
 b=re.findall(pattern,text,re.DOTALL)
+print(f"数据量{len(b)}")
 num=0
 while True:
     try:
