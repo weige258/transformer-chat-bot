@@ -18,7 +18,6 @@ class TransformerDecoder(torch.nn.Module):
         self.attention=torch.nn.MultiheadAttention(emb_size,num_heads,dropout=drop_out)
         self.feed_forward=torch.nn.Sequential(
             torch.nn.Linear(emb_size,4*emb_size),
-            torch.nn.ReLU(),
             torch.nn.Dropout(drop_out),
             torch.nn.Linear(4*emb_size,emb_size),
             torch.nn.Dropout(drop_out)
