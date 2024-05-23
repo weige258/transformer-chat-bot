@@ -1,4 +1,4 @@
-import torch
+import random
 
 from model import *
 
@@ -36,7 +36,7 @@ optimizer=torch.optim.SGD(model.parameters(),lr=1e-4)
 def train(ask,answer):
     prompt=encode(ask).to(device)
     autoregressive=torch.tensor(0).to(device)
-    for next in encode(answer):
+    for next in torch.cat((encode(answer),torch.tensor([10000]))):
         label=probability(next).to(device)
         output=model(autoregressive.unsqueeze(0),prompt)
         loss=loss_func(output,label)
@@ -46,6 +46,7 @@ def train(ask,answer):
         autoregressive=next.to(device)
 
 def generation(text):
+    num=0
     output_text=""
     prompt=encode(text).to(device)
     autoregressive=torch.tensor(0).to(device)
@@ -54,10 +55,14 @@ def generation(text):
             output=model(autoregressive.unsqueeze(0),prompt)
             index=int(torch.multinomial(torch.softmax(output/temperature,dim=-1),1))
             letter=chr(index).encode("utf-8").decode("utf-8")
+            if index==10000:
+                num+=1
+                letter=""
+            if num>random.randint(3,6):
+                break
             output_text+=letter
             autoregressive=torch.tensor(index).to(device)
         except:
             continue
     print(output_text)
     return output_text
-

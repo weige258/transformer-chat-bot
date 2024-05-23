@@ -38,7 +38,7 @@ heads=32
 num_layers=12
 dict_size=60000
 max_length=100
-temperature=0.7
+temperature=0.8
 
 class MainModel(torch.nn.Module):
     def __init__(self):
