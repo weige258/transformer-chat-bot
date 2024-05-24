@@ -1,5 +1,7 @@
 import random
 
+import torch
+
 from model import *
 
 if torch.cuda.is_available():
@@ -35,34 +37,36 @@ optimizer=torch.optim.SGD(model.parameters(),lr=1e-4)
 
 def train(ask,answer):
     prompt=encode(ask).to(device)
-    autoregressive=torch.tensor(0).to(device)
-    for next in torch.cat((encode(answer),torch.tensor([10000]))):
+    answer_tensor= torch.cat((encode(answer),torch.tensor([10000]))).to(device)
+    for next in answer_tensor:
+        autoregressive=prompt[-1].to(device)
         label=probability(next).to(device)
         output=model(autoregressive.unsqueeze(0),prompt)
         loss=loss_func(output,label)
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-        autoregressive=next.to(device)
+        prompt=torch.cat((prompt,next.unsqueeze(0))).to(device)
 
 def generation(text):
     num=0
     output_text=""
-    prompt=encode(text).to(device)
-    autoregressive=torch.tensor(0).to(device)
+    prompt = encode(text).to(device)
     for i in range(max_length):
         try:
+            autoregressive=prompt[-1].to(device)
             output=model(autoregressive.unsqueeze(0),prompt)
-            index=int(torch.multinomial(torch.softmax(output/temperature,dim=-1),1))
+            index = int(torch.multinomial(torch.softmax(output / temperature, dim=-1), 1))
             letter=chr(index).encode("utf-8").decode("utf-8")
             if index==10000:
                 num+=1
                 letter=""
-            if num>random.randint(3,6):
+            if num>random.randint(2,6):
                 break
             output_text+=letter
-            autoregressive=torch.tensor(index).to(device)
+            prompt=torch.cat((prompt,torch.tensor([index]).to(device))).to(device)
         except:
             continue
     print(output_text)
     return output_text
+
