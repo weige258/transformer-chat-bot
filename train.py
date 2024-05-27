@@ -1,5 +1,4 @@
 import re
-import random
 from main import *
 import torch
 f=open("train_sft.csv","r")
@@ -18,7 +17,6 @@ while True:
         answer=b[i]
         train(ask,answer)
         print(ask)
-        print(answer)
         generation(ask)
         print("*"*100)
         num+=1

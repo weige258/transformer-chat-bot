@@ -61,7 +61,7 @@ def generation(text):
             if index==10000:
                 num+=1
                 letter=""
-            if num>random.randint(2,6):
+            if num>random.randint(1,4):
                 break
             output_text+=letter
             prompt=torch.cat((prompt,torch.tensor([index]).to(device))).to(device)
