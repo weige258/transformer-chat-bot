@@ -37,7 +37,7 @@ emb_dim=256
 heads=32
 num_layers=12
 dict_size=60000
-max_length=100
+max_length=256
 temperature=0.8
 
 class MainModel(torch.nn.Module):
