@@ -15,7 +15,7 @@ while True:
         i=random.randint(0,len(a))
         ask=a[i]
         answer=b[i]
-        train(ask,answer)
+        train_one_text(ask+answer)
         print(ask)
         generation(ask)
         print("*"*100)
