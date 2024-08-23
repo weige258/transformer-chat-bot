@@ -43,6 +43,7 @@ temperature=0.8
 class MainModel(torch.nn.Module):
     def __init__(self):
         super().__init__()
+        self.rms_norm = RMSNorm(emb_dim)
         self.embeddings=torch.nn.Embedding(num_embeddings=1114112,embedding_dim=emb_dim)
         self.transformers=torch.nn.ModuleList([TransformerDecoder(emb_dim,heads) for i in range(num_layers)])
         self.output_layer=torch.nn.Linear(emb_dim,dict_size)
@@ -51,6 +52,7 @@ class MainModel(torch.nn.Module):
         prompt=self.embeddings(prompt)
         for block in self.transformers:
             autoregressive=block(autoregressive,prompt)
+        autoregressive=self.rms_norm(autoregressive)
         autoregressive=torch.flatten(autoregressive)
         autoregressive=self.output_layer(autoregressive)
         return autoregressive
