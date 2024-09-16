@@ -1,8 +1,9 @@
 import random
 
-import torch
-
 from model import *
+
+start_tensor=torch.tensor([1])
+end_tensor=torch.tensor([10000])
 
 if torch.cuda.is_available():
     device="cuda"
@@ -10,7 +11,7 @@ else:
     device="cpu"
 
 def encode(text):
-    tensor=torch.tensor([],dtype=torch.long)
+    tensor=torch.tensor([],dtype=torch.int)
     for letter in text:
         try:
             tensor=torch.cat((tensor,torch.tensor([ord(letter)])))
@@ -33,10 +34,12 @@ except:
     model=MainModel().to(device)
     print("新建模型")
 loss_func=torch.nn.CrossEntropyLoss().to(device)
-optimizer=torch.optim.SGD(model.parameters(),lr=1e-4)
+optimizer=torch.optim.SGD(model.parameters(),lr=3e-4)
 
-def train_one_text(text):
-    tensor=torch.cat((encode(text),torch.tensor([10000])))
+def train(ask,answer):
+    ask_tensor=torch.cat((encode(ask),start_tensor))
+    answer_tensor=torch.cat((encode(answer),end_tensor))
+    tensor=torch.cat((ask_tensor,answer_tensor))
     for i in range(1,len(tensor)):
         input=tensor[:i].to(device)
         autoregressive=input[-1].to(device)
@@ -46,19 +49,6 @@ def train_one_text(text):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
-
-def train(ask,answer):
-    prompt=encode(ask).to(device)
-    answer_tensor= torch.cat((encode(answer),torch.tensor([10000]))).to(device)
-    for next in answer_tensor:
-        autoregressive=prompt[-1].to(device)
-        label=probability(next).to(device)
-        output=model(autoregressive.unsqueeze(0),prompt)
-        loss=loss_func(output,label)
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-        prompt=torch.cat((prompt,next.unsqueeze(0))).to(device)
 
 def generation(text):
     num=0
@@ -70,7 +60,9 @@ def generation(text):
             output=model(autoregressive.unsqueeze(0),prompt)
             index = int(torch.multinomial(torch.softmax(output / temperature, dim=-1), 1))
             letter=chr(index).encode("utf-8").decode("utf-8")
-            if index==10000:
+            if index==int(start_tensor):
+                letter=""
+            if index==int(end_tensor):
                 num+=1
                 letter=""
             if num>=random.randint(1,3):

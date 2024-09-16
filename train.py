@@ -15,7 +15,7 @@ while True:
         i=random.randint(0,len(a))
         ask=a[i]
         answer=b[i]
-        train_one_text(ask+answer)
+        train(ask,answer)
         print(ask)
         generation(ask)
         print("*"*100)
@@ -24,6 +24,7 @@ while True:
             torch.save(obj=model,f="model.pth")
         else:
             continue
-    except:
+    except Exception as e:
+        print(e)
         continue
 
