@@ -1,5 +1,7 @@
 import random
 
+import torch
+
 from model import *
 
 start_tensor=torch.tensor([1])
@@ -53,7 +55,7 @@ def train(ask,answer):
 def generation(text):
     num=0
     output_text=""
-    prompt = encode(text).to(device)
+    prompt = torch.cat((encode(text),start_tensor)).to(device)
     for i in range(max_length):
         try:
             autoregressive=prompt[-1].to(device)
