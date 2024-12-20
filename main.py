@@ -1,7 +1,7 @@
 import random
 
 import torch
-
+from  tool.loss_record import record_loss
 from model import *
 
 start_tensor=torch.tensor([1])
@@ -36,7 +36,7 @@ except:
     model=MainModel().to(device)
     print("新建模型")
 loss_func=torch.nn.CrossEntropyLoss().to(device)
-optimizer=torch.optim.SGD(model.parameters(),lr=3e-4)
+optimizer=torch.optim.Adam(model.parameters(),lr=3e-4)
 
 def train(ask,answer):
     ask_tensor=torch.cat((encode(ask),start_tensor))
@@ -48,6 +48,7 @@ def train(ask,answer):
         label= probability(tensor[i]).to(device)
         output=model(autoregressive.unsqueeze(0),input)
         loss=loss_func(output,label)
+        record_loss(float(loss))
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
@@ -75,3 +76,5 @@ def generation(text):
             continue
     print(output_text)
     return output_text
+
+
