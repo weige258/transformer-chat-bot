@@ -41,7 +41,7 @@ class PositionEmbedding(torch.nn.Module):
         self.emb_dim = emb_dim
 
     def forward(self, seq_len, device):
-        position = torch.arange(seq_len).unsqueeze(1).to(device)  # shape: [seq_len, 1]
+        position = torch.arange(seq_len).unsqueeze(1).to(device)  
         div_term = torch.exp(torch.arange(0, self.emb_dim, 2) * (-math.log(10000.0) / self.emb_dim)).to(device)
         trig_args = position * div_term
         pe = torch.zeros(seq_len, self.emb_dim).to(device)
