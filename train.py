@@ -1,6 +1,10 @@
 import re
 from main import *
 import torch
+import tool.timer as timer
+
+timer.run()
+
 f=open("train_sft.csv","r")
 text=f.read()
 text=re.sub(pattern=r"\n",repl="",string=text)
@@ -10,6 +14,8 @@ pattern = r'<s>Assistant:(.*?)</s>'
 b=re.findall(pattern,text,re.DOTALL)
 print(f"数据量{len(b)}")
 num=0
+
+
 while True:
     try:
         i=random.randint(0,len(a))
@@ -20,7 +26,7 @@ while True:
         generation(ask)
         print("*"*100)
         num+=1
-        if num%100==0:
+        if num%50==0:
             torch.save(obj=model,f="model.pth")
         else:
             continue
