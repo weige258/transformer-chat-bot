@@ -76,5 +76,3 @@ def generation(text):
             continue
     print(output_text)
     return output_text
-
-
