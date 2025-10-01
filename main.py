@@ -39,14 +39,14 @@ loss_func=torch.nn.CrossEntropyLoss().to(device)
 optimizer=torch.optim.Adam(model.parameters(),lr=3e-4)
 
 def train(ask,answer):
-    print("---训练问题 \n",ask)
-    print("---训练回答 \n")
+    print("\n---训练问题 \n",ask)
+    print("\n---训练回答 \n")
     
     ask_tensor=torch.cat((encode(ask),start_tensor)).to(device)
     answer_tensor=torch.cat((encode(answer),end_tensor)).to(device)
     tensor=torch.cat((ask_tensor,answer_tensor)).to(device)
     
-    for i in range(len(ask_tensor),len(tensor)-1):
+    for i in range(len(ask_tensor),len(tensor)):
         input_tensor=tensor[0:i]
         autoregressive=input_tensor[-1].unsqueeze(0)
         label=probability(tensor[i]).to(device)
@@ -64,7 +64,7 @@ def generation(text):
     num=0
     output_text=""
     prompt = torch.cat((encode(text),start_tensor)).to(device)
-    print("\n","---生成回复:","\n")
+    print("\n---生成回复:\n")
     for i in range(max_length):
         try:
             autoregressive=prompt[-1].to(device)
