@@ -1,7 +1,7 @@
 import random
 import torch
-from  tool.loss_record import record_loss
 from model import *
+from record import record_loss
 
 start_tensor=torch.tensor([1])
 end_tensor=torch.tensor([10000])
@@ -55,7 +55,7 @@ def train(ask,answer):
 
         output=model(autoregressive,input_tensor)
         loss=loss_func(output,label)
-        record_loss(float(loss))
+        record_loss(loss.item())
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
@@ -76,7 +76,7 @@ def generation(text):
             if index==int(end_tensor):
                 num+=1
                 letter=""
-            if num>=random.randint(1,3):
+            if num>=random.randint(1,4):
                 break
             print(letter,end="")
             output_text+=letter
@@ -84,5 +84,4 @@ def generation(text):
         except:
             continue
     return output_text
-
 

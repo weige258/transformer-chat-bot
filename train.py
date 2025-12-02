@@ -1,9 +1,7 @@
 import re
 from main import *
 import torch
-import tool.timer as timer
 
-timer.run()
 
 f=open("train_sft.csv","r",encoding="utf-8")
 text=f.read()

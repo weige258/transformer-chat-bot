@@ -20,6 +20,7 @@ class TransformerDecoder(torch.nn.Module):
         self.feed_forward=torch.nn.Sequential(
             torch.nn.Linear(emb_size,4*emb_size),
             torch.nn.Dropout(drop_out),
+            torch.nn.SiLU(),
             torch.nn.Linear(4*emb_size,emb_size),
             torch.nn.Dropout(drop_out)
         )
@@ -51,7 +52,7 @@ class PositionEmbedding(torch.nn.Module):
 
 emb_dim=256
 heads=32
-num_layers=12
+num_layers=20
 dict_size=60000
 max_length=256
 temperature=0.8
@@ -86,4 +87,3 @@ class MainModel(torch.nn.Module):
         autoregressive = torch.flatten(autoregressive)
         autoregressive = self.output_layer(autoregressive)
         return autoregressive
-
