@@ -1,0 +1,14 @@
+<time>00:00:00</time><avg_loss>0</avg_loss>
+<time>00:59:26</time><avg_loss>5.642742723109934</avg_loss>
+<time>01:57:48</time><avg_loss>4.943597186270534</avg_loss>
+<time>03:23:57</time><avg_loss>5.484056099784561</avg_loss>
+<time>05:17:50</time><avg_loss>5.220849744551861</avg_loss>
+<time>06:58:07</time><avg_loss>5.168247463132395</avg_loss>
+<time>08:24:12</time><avg_loss>5.259047682831902</avg_loss>
+<time>09:49:48</time><avg_loss>4.79871739198335</avg_loss>
+<time>11:14:54</time><avg_loss>4.942973360334942</avg_loss>
+<time>12:40:20</time><avg_loss>4.820880207735439</avg_loss>
+<time>14:05:43</time><avg_loss>4.609120909529878</avg_loss>
+<time>16:54:15</time><avg_loss>5.1422524642494505</avg_loss>
+<time>19:09:24</time><avg_loss>5.096344241409004</avg_loss>
+<time>19:15:04</time><avg_loss>6.459351</avg_loss>
