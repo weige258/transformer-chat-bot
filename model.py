@@ -1,6 +1,5 @@
 import torch
-import math
-from typing import Tuple
+
 
 class RMSNorm(torch.nn.Module):
     """Root Mean Square Layer Normalization"""
@@ -17,7 +16,7 @@ class RMSNorm(torch.nn.Module):
         return output * self.weight
 
 class TransformerDecoder(torch.nn.Module):
-    """Transformer Decoder Block"""
+    """Transformer Decoder Block with RoPE"""
     def __init__(self, emb_size: int, num_heads: int, drop_out: float = 0.1):
         super().__init__()
         self.rms_norm1 = RMSNorm(emb_size)
@@ -30,13 +29,21 @@ class TransformerDecoder(torch.nn.Module):
             torch.nn.Linear(4 * emb_size, emb_size),
             torch.nn.Dropout(drop_out)
         )
+        self.rope = RoPE(emb_size)  # Add RoPE layer
     
     def forward(self, x: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
         """Forward pass of the decoder block"""
         # Self-attention with context
         residual = x
         x = self.rms_norm1(x)
-        x, _ = self.attention(x, context, context)
+        
+        # Apply RoPE to query and key before attention
+        # For MultiheadAttention, input shape is (seq_len, batch_size, emb_dim)
+        # We need to apply RoPE to x (query) and context (key)
+        x_rope = self.rope(x)
+        context_rope = self.rope(context)
+        
+        x, _ = self.attention(x_rope, context_rope, context)
         x += residual
         
         # Feed forward network
@@ -47,23 +54,53 @@ class TransformerDecoder(torch.nn.Module):
         
         return x
 
-class PositionEmbedding(torch.nn.Module):
-    """Positional Encoding"""
-    def __init__(self, emb_dim: int):
+class RoPE(torch.nn.Module):
+    """Rotary Position Embedding (RoPE)"""
+    def __init__(self, emb_dim: int, base: int = 10000):
         super().__init__()
         self.emb_dim = emb_dim
+        self.base = base
+        # Compute theta values
+        self.theta = 1.0 / (base ** (torch.arange(0, emb_dim, 2) / emb_dim))
 
-    def forward(self, seq_len: int, device: torch.device) -> torch.Tensor:
-        """Generate positional encoding for a sequence of length seq_len"""
-        position = torch.arange(seq_len).unsqueeze(1).to(device)
-        div_term = torch.exp(torch.arange(0, self.emb_dim, 2) * (-math.log(10000.0) / self.emb_dim)).to(device)
-        trig_args = position * div_term
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply RoPE to input tensor x of shape [seq_len, emb_dim] or [seq_len, batch_size, emb_dim]"""
+        device = x.device
         
-        pe = torch.zeros(seq_len, self.emb_dim).to(device)
-        pe[:, 0::2] = torch.sin(trig_args)
-        pe[:, 1::2] = torch.cos(trig_args)
+        # Handle both with and without batch dimension
+        if len(x.shape) == 2:  # [seq_len, emb_dim]
+            seq_len, emb_dim = x.shape
+            batch_size = 1
+            x = x.unsqueeze(1)  # Add batch dimension: [seq_len, 1, emb_dim]
+        elif len(x.shape) == 3:  # [seq_len, batch_size, emb_dim]
+            seq_len, batch_size, emb_dim = x.shape
+        else:
+            raise ValueError(f"Expected input shape [seq_len, emb_dim] or [seq_len, batch_size, emb_dim], got {x.shape}")
         
-        return pe
+        # Expand theta to match sequence length
+        theta = self.theta.to(device).unsqueeze(0).expand(seq_len, -1)
+        
+        # Create position tensor
+        positions = torch.arange(seq_len, dtype=torch.float, device=device).unsqueeze(1)
+        
+        # Compute cos and sin values
+        cos_values = torch.cos(positions * theta).unsqueeze(1)
+        sin_values = torch.sin(positions * theta).unsqueeze(1)
+        
+        # Reshape x to apply RoPE
+        x_reshaped = x.view(seq_len, batch_size, -1, 2)
+        
+        # Apply rotation
+        x_rotated = torch.stack([
+            x_reshaped[..., 0] * cos_values - x_reshaped[..., 1] * sin_values,
+            x_reshaped[..., 0] * sin_values + x_reshaped[..., 1] * cos_values
+        ], dim=-1)
+        
+        # Remove batch dimension if it was added
+        if batch_size == 1 and len(x_rotated.shape) == 4:
+            return x_rotated.view(seq_len, emb_dim)
+        else:
+            return x_rotated.view(seq_len, batch_size, emb_dim)
 
 # Model configuration
 CONFIG = {
@@ -85,7 +122,6 @@ class MainModel(torch.nn.Module):
             num_embeddings=CONFIG['dict_size'],  # Unified with dict_size
             embedding_dim=CONFIG['emb_dim']
         )
-        self.pos_emb = PositionEmbedding(CONFIG['emb_dim'])
         self.transformers = torch.nn.ModuleList([
             TransformerDecoder(CONFIG['emb_dim'], CONFIG['heads'], CONFIG['dropout'])
             for _ in range(CONFIG['num_layers'])
@@ -96,15 +132,6 @@ class MainModel(torch.nn.Module):
         """Forward pass of the model"""
         autoregressive_embed = self.embeddings(autoregressive)
         prompt_embed = self.embeddings(prompt)
-
-        # Add positional encoding
-        seq_len_prompt = prompt.shape[0]
-        prompt_pos_enc = self.pos_emb(seq_len_prompt, autoregressive_embed.device).float()
-        prompt_embed += prompt_pos_enc
-
-        # For autoregressive input, we only need the position encoding for its position
-        autoregressive_pos_enc = self.pos_emb(seq_len_prompt + 1, autoregressive_embed.device)[-1, :].unsqueeze(0).float()
-        autoregressive_embed += autoregressive_pos_enc
 
         # Pass through transformer blocks
         x = autoregressive_embed

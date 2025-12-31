@@ -115,7 +115,7 @@ def generation(text: str) -> str:
     model.eval()
     output_text = ""
     
-    # Prepare initial prompt
+        # Prepare initial prompt
     prompt = torch.cat([
         encode(text).to(device),
         torch.tensor([START_TOKEN], device=device)
@@ -123,30 +123,20 @@ def generation(text: str) -> str:
     
     print("\n---生成回复:")
     
-    with torch.no_grad():
-        for _ in range(CONFIG['max_length']):
+    for _ in range(CONFIG['max_length']):
+        try:
             autoregressive_input = prompt[-1].unsqueeze(0).to(device)
             output = model(autoregressive_input, prompt)
             
             # Sample from the output distribution
             probs = torch.softmax(output / CONFIG['temperature'], dim=-1)
             index = int(torch.multinomial(probs, 1))
-            
-            # Check if we've reached the end token
             if index == END_TOKEN:
                 break
-            
-            # Append to output text if not special token
-            if index != START_TOKEN:
-                try:
-                    char = chr(index)
-                    print(char, end="", flush=True)
-                    output_text += char
-                except:
-                    continue
-            
-            # Update prompt with the new token
-            prompt = torch.cat([prompt, torch.tensor([index], device=device)])
     
-    print("", flush=True)  # New line after generation
+            print(chr(int(index)), end="")
+            output_text += chr(int(index))
+            prompt = torch.cat([prompt, torch.tensor([index], device=device)])
+        except Exception as e:
+            continue
     return output_text
