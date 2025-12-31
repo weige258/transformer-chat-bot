@@ -12,3 +12,5 @@
 <time>16:54:15</time><avg_loss>5.1422524642494505</avg_loss>
 <time>19:09:24</time><avg_loss>5.096344241409004</avg_loss>
 <time>19:15:04</time><avg_loss>6.459351</avg_loss>
+<time>19:21:44</time><avg_loss>6.688331</avg_loss>
+<time>19:28:16</time><avg_loss>6.716226</avg_loss>
