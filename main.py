@@ -150,4 +150,3 @@ def generation(text: str) -> str:
     
     print("", flush=True)  # New line after generation
     return output_text
-
